@@ -7,6 +7,11 @@ import java.sql.*;
 import java.util.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import org.jsoup.Jsoup;
+import org.jsoup.helper.Validate;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 public class Crawler
 {
@@ -101,46 +106,38 @@ public class Crawler
      	pstmt.executeUpdate(); 
     }	
 
-    public String makeAbsoluteURL(String url, String parentURL, boolean flag) {
+    public String makeAbsoluteURL(String url, String parentURL) {
 	if (url.length() >=3 && url.indexOf("://")>0) {
 	    return url;
 	}
-	if (flag == false && url.length() > 0 ) {
-		
+	if (url.length() > 0 ) {
 	    String newParentURL = new String(parentURL); 
 	    StringBuffer TempUrl = new StringBuffer(url); 
-
+	    // For path like:    < http://parent/path > < path/to/myfile/ >    
 	    if(url.charAt(0) != '/' && parentURL.charAt(parentURL.length()-1)!='/' && parentURL.charAt(0)!= '.')  {
 		StringBuilder builder = new StringBuilder();
 		builder.append(newParentURL).append("/");
 		newParentURL =builder.toString(); 
 	    }
+	    // For path like:   < http://parent/path/ > < /path/to/myfile/ >
 	    if( url.length()>1 && url.charAt(0) == '/' &&  parentURL.charAt(parentURL.length()-1)=='/')  {
 		newParentURL = parentURL.substring(0,newParentURL.length()-1); 
 	    }
-	    // For relative URL; 
+	    
+	    // For path like:   < http://parent/path/ > < ../path/to/myfile/ >
 	    if(url.length()>=4 && url.substring(0,3).equals("../") && parentURL.charAt(parentURL.length()-1)=='/' ) {
 		int pos = newParentURL.substring(0, newParentURL.length()-1).lastIndexOf("/"); 
 		newParentURL = newParentURL.substring(0,pos+1);
 		TempUrl.delete(0,3); 
 	    }	
+	   
+	    // For path like:   < http://parent/path > < ../path/to/myfile >
 	    if(url.length()>=4 && url.substring(0,3).equals("../") && parentURL.charAt(parentURL.length()-1)!='/' ) {
 		TempUrl.delete(0,3); 
 	    }
 			
 	    TempUrl.insert(0,newParentURL);
 	    return TempUrl.toString().replaceAll("\\s","");
-	} 
-	// True means 	
-	if (flag == true && url.length() > 0 ) {
-	    String newParentURL_1 = new String(parentURL); //.replaceAll("://", "...")); 
-	    StringBuffer TempUrl_1 = new StringBuffer(url); 
-	    //System.out.println("Parent = "+ newParentURL_1); 
-	    int pos1 = newParentURL_1.indexOf("/"); 
-	    //System.out.println("Pos1= "+pos1);
-	    newParentURL_1 = parentURL.substring(0, pos1); 
-	    TempUrl_1.insert(0,newParentURL_1);
-	    return TempUrl_1.toString().replaceAll("\\s","");
 	} 
 	return url;
     }
@@ -213,10 +210,11 @@ public class Crawler
 	    File f = new File( this.path +   "[" + (ImageurlID-1) +"]-" +name  + ".png"); 
             
 	    if (image!=null) {
-		
-		System.out.println("No Images: '" +url + "'");
 		ImageIO.write(image, "png", f);
+		System.out.println("Successful Downloaded: '" +url + "'");
 		downloadSize = downloadSize + f.length(); 
+	    }else {
+		System.out.println("No Images: '" +url + "'");
 	    }
 	}catch(IOException e){
             e.printStackTrace();
@@ -226,86 +224,21 @@ public class Crawler
 	
     public void fetchURL(String urlScanned) {
 	try {
-	    URL url = new URL(urlScanned);
-	    HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-	    huc.setConnectTimeout(5 * 1000);
-	    huc.setReadTimeout(5 * 1000);
-
-	    // open reader for URL
-	    InputStreamReader in = new InputStreamReader(url.openStream());
-	    StringBuilder input = new StringBuilder();
-	    int ch;
-	    while ((ch = in.read()) != -1) {
-		input.append((char) ch);
-	    }
-	    new String(); 
-	    //String patternString =  "(<a\\s+href\\s*=\\s*\"([^\"]*)\"[^>]*\\s*>[^<]*</a>)[^<]*</[^>]*>";    	
-	    String patternString =  "(\\s+href\\s*=\\s*\"([^\"]*)\"[^>]*\\s*>[^<]*</a>)[^<]*</[^>]*>";    	
- 	    Pattern pattern = 			
-		Pattern.compile(patternString, 
-    				Pattern.CASE_INSENSITIVE);
-	    Matcher matcher = pattern.matcher(input);
-	    while (matcher.find() ) {
-				
-		String urlFound = matcher.group(2).replaceAll("\"","");
-		int len = urlFound.length(); 
-		if(len>=4)		{
-		    String EndSubstring = urlFound.substring(len-4,len); 
-		    String BeginSubstring = urlFound.substring(0,4); 
-		    if (EndSubstring.equals(".pdf") 
-			|| EndSubstring.equals(".ppt") 
-			|| EndSubstring.equals(".doc")
-			|| BeginSubstring.equals("mail")
-			|| BeginSubstring.equals("ftp:"))
-			continue; 
-		}
-		
-		urlFound = makeAbsoluteURL(urlFound, urlScanned, true).replaceAll("\\s",""); 
-		
+	    Document doc = Jsoup.connect(urlScanned).get();
+	    Elements links = doc.select("a");
+	    for (Element link:links) {
+		String urlFound = link.absUrl("href"); 
+		System.out.println(urlFound2); 
 		if (!urlInDB(urlFound, "URLS")) {
 		    NextURLID ++;
 		    insertURLInDB(urlFound);
-		}				
-	    }
-			
-	    String remain = matcher.replaceAll("###############"); 
-	    StringBuilder input_1 = new StringBuilder();
-	    input_1.append(remain); 
-	    String patternString_1 =  "<a\\s+href\\s*=\\s*\"([^\"]*\"|[^\\s>]*)\\s*>";    		  // original regex
-	    int pos2= patternString_1.indexOf(" ");
-	    if(pos2!=-1) {
-		patternString_1 = patternString_1.substring(0, pos2); 
-	    }
-			
-	    Pattern pattern_1 = 			
-		Pattern.compile(patternString_1, 
-    				Pattern.CASE_INSENSITIVE);
-	    Matcher matcher_1 = pattern_1.matcher(input_1);
-	    while (matcher_1.find() ) {
-				
-		String urlFound_1 = matcher_1.group(1).replaceAll("\"",""); 
-		int len = urlFound_1.length(); 
-		if(len>=4)		{
-		    String EndSubstring_1 = urlFound_1.substring(len-4,len); 
-		    String BeginSubstring_1 = urlFound_1.substring(0,4); 
-		    if (EndSubstring_1.equals(".pdf") 
-			|| EndSubstring_1.equals(".ppt") 
-			|| EndSubstring_1.equals(".doc")
-			|| BeginSubstring_1.equals("mail")
-			|| BeginSubstring_1.equals("ftp:"))
-			continue; 
-		}
-		urlFound_1 = makeAbsoluteURL(urlFound_1, urlScanned, false).replaceAll("\\s",""); 
-		if (!urlInDB(urlFound_1, "URLS")) {
-		    NextURLID ++;
-		    insertURLInDB(urlFound_1);
-		}				
+		}	
 	    }
 	}
-      	catch (Exception e)
-	    {
+      	 catch (Exception e)
+	     {
     		e.printStackTrace();
-	    }
+	     }
     }
 	
    	
@@ -330,7 +263,7 @@ public class Crawler
 	    int test = 0 ; 
 	    while (matcherImage.find() ) {
 		String urlFoundImage = matcherImage.group(1).replaceAll("\"","");	
-		urlFoundImage = makeAbsoluteURL(urlFoundImage, urlScanned, true).replaceAll("\\s",""); 
+		urlFoundImage = makeAbsoluteURL(urlFoundImage, urlScanned).replaceAll("\\s",""); 
 		test = test +1; 
 		if (!urlInDB(urlFoundImage, "ImageURLS")) {
 		    insertImageURLInDB(urlFoundImage); 

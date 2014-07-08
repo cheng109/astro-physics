@@ -1,0 +1,37 @@
+=================================================================
+1. How to nstall MySQL? 
+Check mysql website.
+
+2. How to restart mysql server on Mac ? 
+sudo /usr/local/mysql/support-files/mysql.server restart
+
+=================================================================
+Some useful MySQL query commands: 
+
+mysql --user=root
+mysql -u root -p 
+
+create database myfirst; 
+show databases; 
+use myfirst; 
+create table mytable(name varchar(100), age integer); 
+describe mytable; 
+
+//To drop a colum:
+alter table mytable drop column name; 
+alter table mytable drop column name varchar(100); 
+
+//To figure out the user and host name: 
+select user();
+show variables;    
+
+//To set JDBC: 
+for Windows:  java -classpath ".;c:\mylib\*" MyApp
+for Linux: java -classpath '.:/mylib/*' MyApp
+
+//To display a column a table; 
+select column from table;
+
+//To display chinese characters: 
+CREATE DATABASE <database name> DEFAULT CHARACTER SET utf8
+=================================================================

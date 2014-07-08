@@ -1,5 +1,6 @@
 #!/bin/bash
-javac -classpath "." -d ../ Crawler.java CrawlThread.java WebCrawl.java
-echo "Done!"
+javac -encoding gb2312 -classpath "." -d ../ Crawler.java CrawlThread.java WebCrawl.java
+echo "Compilation done!"
+echo "================="
 cd ..
 java -cp 'mysql-connector-java-5.1.15-bin.jar:.' -Xmx1024M ImageDownload.CrawlThread

@@ -122,20 +122,21 @@ public class Crawler
 		name = new String("Unknown_name_");
 	    }
 	}
-		
+	String imgType = urlstring.substring(urlstring.length()-3, urlstring.length());
 	try  {
 	    URL url = new URL(urlstring);
 	    HttpURLConnection con=(HttpURLConnection) url.openConnection();
 	    con.setConnectTimeout(5000); 
 	    con.setReadTimeout(10000); 
 	    image = ImageIO.read(con.getInputStream());
-	    File f = new File( assignDirectory(urlstring) +  name + "_" +ImageurlID); 
+
+	    File f = new File( assignDirectory(urlstring, imgType) +  name + "_" +ImageurlID + "."+imgType); 
 	    if (image!=null) {
 		ImageIO.write(image, "png", f);
-		//System.out.println("Successful Downloaded: '" +url + "'");
+		System.out.println("Successful Downloaded: '" +url + "'");
 		downloadSize = downloadSize + f.length(); 
 	    }else {
-		//System.out.println("No Images: '" +url + "'");
+		System.out.println("No Images: '" +url + "'");
 	    }
 	}catch(IOException e){
             e.printStackTrace();
@@ -177,17 +178,23 @@ public class Crawler
 	}
     }
 
-    public String assignDirectory(String imageURL) {
-	String imgType = imageURL.substring(imageURL.length()-3, imageURL.length());
+    public String assignDirectory(String imageURL, String imgType) {
+	//String imgType = imageURL.substring(imageURL.length()-3, imageURL.length());
 	String imagePath = null;
-	//if(imgType=="png" || imgType=="jpg" || imgType=="png" || imgType=="gif") {
+	String otherPath = this.path + "other/";
+	if(imgType.equals("png") || imgType.equals("jpg") || imgType.equals("png") || imgType.equals("gif")) {
 	imagePath = this.path + imgType +"/";
-	    //} else {
-	    //imagePath = this.path +"other/"+ imgType +"/";
-	    //}
-	File dir = new File(imagePath); 
-	if(!dir.exists()) {
-	    dir.mkdir();
+	} else {
+	    imagePath = otherPath + imgType +"/";
+	}
+
+	File dir1 = new File(otherPath);
+	File dir2 = new File(imagePath); 
+	if(!dir1.exists()) {
+	    dir1.mkdir();
+	}
+	if(!dir2.exists()) {
+	    dir2.mkdir();
 	}
 	return imagePath;
     }

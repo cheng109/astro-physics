@@ -179,11 +179,12 @@ public class Crawler
 
     public String assignDirectory(String imageURL) {
 	String imgType = imageURL.substring(imageURL.length()-3, imageURL.length());
-	if(imgType=="png" || imgType=="jpg" || imgType=="png") {
-	    String imagePath = this.path + imgType +"/";
-	} else {
-	    String imagePath = this.path +"other/"+ imgType +"/";
-	}
+	String imagePath = null;
+	//if(imgType=="png" || imgType=="jpg" || imgType=="png" || imgType=="gif") {
+	imagePath = this.path + imgType +"/";
+	    //} else {
+	    //imagePath = this.path +"other/"+ imgType +"/";
+	    //}
 	File dir = new File(imagePath); 
 	if(!dir.exists()) {
 	    dir.mkdir();

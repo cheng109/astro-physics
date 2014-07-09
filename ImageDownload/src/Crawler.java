@@ -118,7 +118,6 @@ public class Crawler
 	}
 	if (rs.next()) {
 	    name = rs.getString("imageDescription"); 
-	    System.out.println("name='"+name+"'");
 	    if (name.length() < 2) {
 		name = new String("Unknown_name_");
 	    }
@@ -133,10 +132,10 @@ public class Crawler
 	    File f = new File( assignDirectory(urlstring) +  name + "_" +ImageurlID); 
 	    if (image!=null) {
 		ImageIO.write(image, "png", f);
-		System.out.println("Successful Downloaded: '" +url + "'");
+		//System.out.println("Successful Downloaded: '" +url + "'");
 		downloadSize = downloadSize + f.length(); 
 	    }else {
-		System.out.println("No Images: '" +url + "'");
+		//System.out.println("No Images: '" +url + "'");
 	    }
 	}catch(IOException e){
             e.printStackTrace();
@@ -168,7 +167,6 @@ public class Crawler
 	    insertDescription(description, NextURLIDScanned);		   
 	    for (Element link:links) {
 		String urlFoundImage = link.absUrl("src");
-		
 		if (!urlInDB(urlFoundImage, "ImageURLS")) {
 		    insertImageURLInDB(urlFoundImage,link.attr("alt")); 
  		    imageDownload(urlFoundImage); 
@@ -181,7 +179,11 @@ public class Crawler
 
     public String assignDirectory(String imageURL) {
 	String imgType = imageURL.substring(imageURL.length()-3, imageURL.length());
-	String imagePath = this.path + imgType +"/";
+	if(imgType=="png" || imgType=="jpg" || imgType=="png") {
+	    String imagePath = this.path + imgType +"/";
+	} else {
+	    String imagePath = this.path +"other/"+ imgType +"/";
+	}
 	File dir = new File(imagePath); 
 	if(!dir.exists()) {
 	    dir.mkdir();

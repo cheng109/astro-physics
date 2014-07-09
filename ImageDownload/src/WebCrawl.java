@@ -38,11 +38,10 @@ public class WebCrawl {
 	    crawler.ImageurlID = 0; 
 	    crawler.urlID=1;
 	    crawler.fetchURL(root);	
-	    crawler.fetchDescription(root, crawler.NextURLIDScanned); 
+	    //crawler.fetchDescription(root, crawler.NextURLIDScanned); 
 	    crawler.fetchImageURL(root); 
 	}catch(Exception e) {
 	    e.printStackTrace();
-	    System.out.println("haha2\n");
 	}
     }
 	
@@ -62,12 +61,11 @@ public class WebCrawl {
 		    System.out.println(crawler.NextURLIDScanned+ "/" + maxurls); 
 		    System.out.println("[urlID]=" +crawler.urlID); 
 		}	
-		crawler.fetchDescription(url1, crawler.NextURLIDScanned); 
+		//crawler.fetchDescription(url1, crawler.NextURLIDScanned); 
 		crawler.fetchImageURL(url1); 
 	    }
 	    catch( Exception e) {
 		e.printStackTrace();
-		//		continue; 
 	    }
 	    crawler.NextURLIDScanned++; 
 	}

@@ -1,6 +1,6 @@
 #!/bin/bash
 cd ..
-javac -encoding gb2312 -classpath ./jsoup-1.7.3.jar src/Crawler.java src/CrawlThread.java src/WebCrawl.java -d .
+javac -encoding gb2312 -classpath ./jsoup-1.7.3.jar src/Crawler.java src/CrawlThread.java src/WebCrawl.java src/confCrawler.java src/multipleMain.java -d .
 echo "Compilation done!"
 echo "================="
-java -cp 'mysql-connector-java-5.1.15-bin.jar:jsoup-1.7.3.jar:.' -Xmx1024M ImageDownload.CrawlThread
+java -cp 'mysql-connector-java-5.1.15-bin.jar:jsoup-1.7.3.jar:.' -Xmx1024M ImageDownload.multipleMain

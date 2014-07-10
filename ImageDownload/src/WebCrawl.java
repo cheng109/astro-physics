@@ -5,40 +5,30 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public class WebCrawl {
-    public Crawler crawler = new Crawler();
+    public Crawler crawler; 
     public int maxurls; 
-    public Properties props;  
     public String root; 
-    public String task; 
-    public WebCrawl(String task){
-	this.task=task;
+    public int jobID; 
+    public WebCrawl(int jobID, String confName) {
+	this.jobID = jobID;
+	crawler = new Crawler(jobID, confName); 
     }
 	
     public void startCrawl() {
 	crawler.NextURLIDScanned = 0; 
 	String folder=new String(); 
 	try {
-	    crawler.readProperties();
-	    String parentPath=crawler.props.getProperty("download.path"); 
-	    root = crawler.props.getProperty("crawler.root");
-	    folder = crawler.props.getProperty("folder"); 
-	    crawler.jdbcURL = crawler.props.getProperty("jdbc.url");
-	    
-	    int pos = crawler.jdbcURL.lastIndexOf('/'); 
-	    crawler.nameDB = crawler.jdbcURL.substring(pos+1, crawler.jdbcURL.length()); 
-	    System.out.println("DB Name:" + crawler.nameDB +"\n================="); 
-	    crawler.path = parentPath + folder+ "/"; 
-	    File f=new File(crawler.path); 
+	    root = crawler.config.urlRoot[jobID]; 
+	    File f=new File(crawler.config.fullPath[jobID]); 
 	    if(!f.isDirectory()) {
 		f.mkdir(); 
 	    }
-	    maxurls = Integer.parseInt(crawler.props.getProperty("crawler.maxurls")); 
+	    maxurls = crawler.config.crawlerMAXURL;
 	    crawler.createDB();
 	    crawler.insertURLInDB(root); 
 	    crawler.ImageurlID = 0; 
 	    crawler.urlID=1;
 	    crawler.fetchURL(root);	
-	    //crawler.fetchDescription(root, crawler.NextURLIDScanned); 
 	    crawler.fetchImageURL(root); 
 	}catch(Exception e) {
 	    e.printStackTrace();
@@ -61,7 +51,6 @@ public class WebCrawl {
 		    System.out.println(crawler.NextURLIDScanned+ "/" + maxurls); 
 		    System.out.println("[urlID]=" +crawler.urlID); 
 		}	
-		//crawler.fetchDescription(url1, crawler.NextURLIDScanned); 
 		crawler.fetchImageURL(url1); 
 	    }
 	    catch( Exception e) {

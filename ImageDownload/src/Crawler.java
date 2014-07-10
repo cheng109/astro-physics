@@ -18,23 +18,19 @@ public class Crawler
     public Connection connection;
     public int urlID;
     public int ImageurlID; 
-    public Properties props;
-    public String path; 
     public int NextURLID = 0;
     public int ImageNextURLID = 0;
     public int NextURLIDScanned; 
     public static long downloadSize = 0; 
-    public String nameDB; 
+    // public String nameDB; 
     public String jdbcURL; 
-    Crawler() {
+    public int jobID; 
+    
+    public confCrawler config ; 
+    Crawler(int jobID, String confName) {
 	urlID = 0;
-    }
-
-    public void readProperties() throws IOException {
-	props = new Properties();
-	FileInputStream in = new FileInputStream("database.properties");
-	props.load(in);
-	in.close();
+	this.jobID = jobID; 
+	config = new confCrawler(confName); 
     }
 
     public void openConnection() throws SQLException, IOException
@@ -48,32 +44,34 @@ public class Crawler
 	} catch (ClassNotFoundException e) {
 	    e.printStackTrace();
 	} 
-	String drivers = props.getProperty("jdbc.drivers");
-	if (drivers != null) System.setProperty("jdbc.drivers", drivers);
-	String username = props.getProperty("jdbc.username");
-	String password = props.getProperty("jdbc.password");
-	connection = DriverManager.getConnection( jdbcURL, username, password);
+	this.connection = DriverManager.getConnection(this.config.jdbcURL[jobID], this.config.jdbcUSERNAME, this.config.jdbcPASSWORD);
     }
 
     public void createDB() throws SQLException, IOException {
 	openConnection();
 	Statement stat = connection.createStatement();
-	// Delete the table first if any
+
 	try {
-	    stat.executeUpdate("DROP TABLE " + nameDB + ".URLS");
+	    stat.executeUpdate("CREATE DATABASE " + config.nameDB[jobID] ); 
+	    System.out.println("Create a new database: '" + config.nameDB[jobID] + "'"); 
+	} catch (Exception e) {
+	    System.out.println("Database '" + config.nameDB[jobID] + "' already exists"); 
+	} 
+	try {
+	    stat.executeUpdate("DROP TABLE " + config.nameDB[jobID] + ".URLS");
 	    stat.executeUpdate("DROP TABLE ImageURLS");
 	}
 	catch (Exception e) {
 	}
-	stat.executeUpdate("CREATE TABLE " + nameDB + 
+	stat.executeUpdate("CREATE TABLE " + config.nameDB[jobID] + 
 			   ".URLS (urlid INT, url VARCHAR(512), description VARCHAR(512) character set utf8 ) ");
-	stat.executeUpdate("CREATE TABLE " + nameDB + 
+	stat.executeUpdate("CREATE TABLE " + config.nameDB[jobID] + 
 			   ".ImageURLS (urlid INT,url VARCHAR(512), imageDescription VARCHAR(512) character set utf8)");
     }
 
     public boolean urlInDB(String urlFound, String table) throws SQLException, IOException {
 	Statement stat = connection.createStatement();
-	ResultSet result = stat.executeQuery( "SELECT * FROM " + nameDB +"." + table +
+	ResultSet result = stat.executeQuery( "SELECT * FROM " + config.nameDB[jobID] +"." + table +
 					      " WHERE url LIKE '"+urlFound+"'");
 	if (result.next()) {
 	    return true;
@@ -83,7 +81,7 @@ public class Crawler
 	
     public void insertURLInDB( String url) throws SQLException, IOException {
         Statement stat = connection.createStatement();
-	String query = "INSERT INTO " + nameDB + "." + "URLS(urlid, url) VALUES ('"+urlID+"','"+url+"')";
+	String query = "INSERT INTO " + config.nameDB[jobID] + "." + "URLS(urlid, url) VALUES ('"+urlID+"','"+url+"')";
 	//System.out.println("Executing "+query);
 	stat.executeUpdate( query );
 	urlID++;
@@ -91,7 +89,7 @@ public class Crawler
 	
     public void insertImageURLInDB( String url, String imageDescription) throws SQLException, IOException {
         Statement stat = connection.createStatement();
-	String query = "INSERT INTO " + nameDB + "." 
+	String query = "INSERT INTO " + config.nameDB[jobID] + "." 
 	    + "ImageURLS(urlid, url, imageDescription) VALUES ('"+ImageurlID+"','"+url +"','" +imageDescription+"')";
 	stat.executeUpdate( query );
 	ImageurlID++;
@@ -99,7 +97,7 @@ public class Crawler
 	
     public void insertDescription( String description, int NextURLIDScanned) throws SQLException, IOException {
      	PreparedStatement pstmt 
-	    = connection.prepareStatement("update " + nameDB + "." +  "URLs set description= ? where urlid = ?");
+	    = connection.prepareStatement("update " + config.nameDB[jobID] + "." +  "URLs set description= ? where urlid = ?");
      	pstmt.setString(1,description);
      	pstmt.setInt(2, NextURLIDScanned); 
      	pstmt.executeUpdate(); 
@@ -111,15 +109,15 @@ public class Crawler
 	ResultSet rs = null; 
 	try {
 	    Statement stat = connection.createStatement();
-	    String query = "select imageDescription from " + nameDB + "." + "imageURLS where (urlid= " + (ImageurlID-1) + "); "; 
+	    String query = "select imageDescription from " + config.nameDB[jobID] + "." + "imageURLS where (urlid= " + (ImageurlID-1) + "); "; 
 	    rs = stat.executeQuery( query );
 	} catch (SQLException e1) {
 	    e1.printStackTrace();
 	}
 	if (rs.next()) {
-	    name = rs.getString("imageDescription"); 
+	    name = rs.getString("imageDescription").replaceAll("[^A-Za-z0-9]", " ").replaceAll(" +","_"); 
 	    if (name.length() < 2) {
-		name = new String("Unknown_name_");
+		name = new String("unknown_name");
 	    }
 	}
 	String imgType = urlstring.substring(urlstring.length()-3, urlstring.length());
@@ -179,15 +177,13 @@ public class Crawler
     }
 
     public String assignDirectory(String imageURL, String imgType) {
-	//String imgType = imageURL.substring(imageURL.length()-3, imageURL.length());
 	String imagePath = null;
-	String otherPath = this.path + "other/";
+	String otherPath = config.fullPath[jobID] +"/" + "other/";
 	if(imgType.equals("png") || imgType.equals("jpg") || imgType.equals("png") || imgType.equals("gif")) {
-	imagePath = this.path + imgType +"/";
+	imagePath = config.fullPath[jobID] +"/" + imgType +"/";
 	} else {
 	    imagePath = otherPath + imgType +"/";
 	}
-
 	File dir1 = new File(otherPath);
 	File dir2 = new File(imagePath); 
 	if(!dir1.exists()) {

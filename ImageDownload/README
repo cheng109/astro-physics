@@ -1,9 +1,10 @@
 =================================================================
 1. How to nstall MySQL? 
-Check mysql website.
+Check mysql website. Before you start the program, you need to create databases manullay. (this bug is not fixed now)
 
 2. How to restart mysql server on Mac ? 
 sudo /usr/local/mysql/support-files/mysql.server restart
+
 
 =================================================================
 Some useful MySQL query commands: 

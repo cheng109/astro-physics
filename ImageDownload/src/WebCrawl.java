@@ -2,7 +2,6 @@ package ImageDownload;
 import java.io.File;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Properties;
 
 public class WebCrawl {
     public Crawler crawler; 
@@ -16,7 +15,6 @@ public class WebCrawl {
 	
     public void startCrawl() {
 	crawler.NextURLIDScanned = 0; 
-	String folder=new String(); 
 	try {
 	    root = crawler.config.urlRoot[jobID]; 
 	    File f=new File(crawler.config.fullPath[jobID]); 

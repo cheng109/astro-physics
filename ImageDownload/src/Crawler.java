@@ -2,13 +2,10 @@ package ImageDownload;
 
 import java.io.*;
 import java.net.*;
-import java.util.regex.*;
 import java.sql.*;
-import java.util.*;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import org.jsoup.Jsoup;
-import org.jsoup.helper.Validate;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -180,9 +177,9 @@ public class Crawler
 	String imagePath = null;
 	String otherPath = config.fullPath[jobID] +"/" + "other/";
 	if(imgType.equals("png") || imgType.equals("jpg") || imgType.equals("png") || imgType.equals("gif")) {
-	imagePath = config.fullPath[jobID] +"/" + imgType +"/";
+	    imagePath = config.fullPath[jobID] +"/" + imgType +"/";
 	} else {
-	    imagePath = otherPath + imgType +"/";
+	    imagePath = otherPath;
 	}
 	File dir1 = new File(otherPath);
 	File dir2 = new File(imagePath); 
